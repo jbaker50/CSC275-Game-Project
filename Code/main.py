@@ -17,14 +17,14 @@ class Game:
         self.running = True
         self.font_name = pg.font.match_font(FONT_NAME)
 
-    def new(self):
+    def new(self, plats=PLATFORM_LIST):
         # start a new game
         self.score = 0
         self.all_sprites = pg.sprite.Group()
         self.platforms = pg.sprite.Group()
         self.player = Player(self)
         self.all_sprites.add(self.player)
-        for plat in PLATFORM_LIST:
+        for plat in plats:
             p = Platform(*plat)
             self.all_sprites.add(p)
             self.platforms.add(p)
@@ -54,22 +54,15 @@ class Game:
             self.player.pos.x += abs(self.player.vel.x)
             for plat in self.platforms:
                 plat.rect.x += abs(self.player.vel.x)
-                #if plat.rect.top >= HEIGHT:
-                 #   plat.kill() 
-                 #   self.score += 10
-                 
+            #FLOOR = (0, HEIGHT - 40, WIDTH, 40)
+         
+        # if player reaches right 1/4 of screen        
         if self.player.rect.right >= 3*(WIDTH / 4):
             self.player.pos.x -= abs(self.player.vel.x)
             for plat in self.platforms:
-                plat.rect.x -= abs(self.player.vel.x)
-                #if plat.rect.top >= HEIGHT:
-                 #   plat.kill() 
-                 #   self.score += 10
-        
-        
-        
+                plat.rect.x -= abs(self.player.vel.x)        
                  
-        # if player reaches right 1/4 of screen
+
 
         # Die!
         # rework this later to work with getting hit by enemy
@@ -87,8 +80,8 @@ class Game:
             #p = plat
         #                 random.randrange(-75, -30),
         #                 width, 20)
-        #    self.platforms.add(p)
-        #    self.all_sprites.add(p)
+        #self.platforms.add(FLOOR)
+        #self.all_sprites.add(FLOOR)
 
     def events(self):
         # Game Loop - events
@@ -103,8 +96,9 @@ class Game:
                     self.player.jump()
                     
             if event.type == CHANGE_PLATFORMS:
-                    plats = [FLOOR]
-                    #self.new(plats=plats)
+                F = (0, HEIGHT - 40, WIDTH, 40)
+                plats = [F]
+                self.new(plats=plats)
 
     def draw(self):
         # Game Loop - draw
