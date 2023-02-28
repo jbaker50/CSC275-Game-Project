@@ -57,6 +57,14 @@ class Game:
                 #if plat.rect.top >= HEIGHT:
                  #   plat.kill() 
                  #   self.score += 10
+                 
+        if self.player.rect.right >= 3*(WIDTH / 4):
+            self.player.pos.x -= abs(self.player.vel.x)
+            for plat in self.platforms:
+                plat.rect.x -= abs(self.player.vel.x)
+                #if plat.rect.top >= HEIGHT:
+                 #   plat.kill() 
+                 #   self.score += 10
         
         
         
