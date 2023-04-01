@@ -41,7 +41,7 @@ grenade_fx.set_volume(0.05)
 start_img = pygame.image.load('img/start_btn.png').convert_alpha()
 exit_img = pygame.image.load('img/exit_btn.png').convert_alpha()
 restart_img = pygame.image.load('img/restart_btn.png').convert_alpha()
-settings_img = pygame.image.load('img/exit_btn.png').convert_alpha()
+settings_img = pygame.image.load('img/settings_btn.png').convert_alpha()
 #background
 pine1_img = pygame.image.load('img/Background/pine1.png').convert_alpha()
 pine2_img = pygame.image.load('img/Background/pine2.png').convert_alpha()
