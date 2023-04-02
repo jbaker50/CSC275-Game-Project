@@ -1,3 +1,5 @@
+from turtle import _Screen
+from matplotlib.font_manager import get_font
 import pygame
 from pygame import mixer
 import os
@@ -663,7 +665,10 @@ while run:
 		if exit_button.draw(screen):
 			run = False
 		if settings_button.draw(screen):
-			run = False
+			screen.fill(BLACK)
+			font = pygame.font.SysFont(None, 24)
+			img = font.render('settings menu', True, WHITE)
+			screen.blit(img, (20, 20))
 	else:
 		#update background
 		draw_bg()
