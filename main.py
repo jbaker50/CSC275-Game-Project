@@ -22,8 +22,6 @@ FPS = 60
 moving_left = False
 moving_right = False
 shoot = False
-grenade = False
-grenade_thrown = False
 
 
 #load music and sounds
@@ -34,8 +32,6 @@ jump_fx = pygame.mixer.Sound('audio/mixkit-air-woosh-1489.wav')
 jump_fx.set_volume(0.05)
 shot_fx = pygame.mixer.Sound('audio/mixkit-magic-glitter-shot-2353.wav')
 shot_fx.set_volume(0.05)
-#grenade_fx = pygame.mixer.Sound('audio/grenade.wav')
-#grenade_fx.set_volume(0.05)
 
 
 #load images
@@ -57,16 +53,14 @@ for x in range(TILE_TYPES):
 	img_list.append(img)
 #bullet
 bullet_img = pygame.image.load('img/icons/bullet.png').convert_alpha()
-#grenade
-grenade_img = pygame.image.load('img/icons/grenade.png').convert_alpha()
+#fireball
 #pick up boxes
 health_box_img = pygame.image.load('img/icons/health_box.png').convert_alpha()
-ammo_box_img = pygame.image.load('img/icons/ammo_box.png').convert_alpha()
-grenade_box_img = pygame.image.load('img/icons/grenade_box.png').convert_alpha()
+mana_box_img = pygame.image.load('img/icons/ammo_box.png').convert_alpha()
 item_boxes = {
 	'Health'	: health_box_img,
-	'Ammo'		: ammo_box_img,
-	'Grenade'	: grenade_box_img
+	'Mana'		: mana_box_img,
+	'Items'		: health_box_img,
 }
 
 #define font
@@ -91,8 +85,6 @@ def draw_bg():
 def reset_level():
 	enemy_group.empty()
 	bullet_group.empty()
-	grenade_group.empty()
-	explosion_group.empty()
 	item_box_group.empty()
 	decoration_group.empty()
 	water_group.empty()
@@ -110,15 +102,15 @@ def reset_level():
 
 
 class Wizard(pygame.sprite.Sprite):
-	def __init__(self, char_type, x, y, scale, speed, ammo, grenades):
+	def __init__(self, char_type, x, y, scale, speed, mana, fireballs):
 		pygame.sprite.Sprite.__init__(self)
 		self.alive = True
 		self.char_type = char_type
 		self.speed = speed
-		self.ammo = ammo
-		self.start_ammo = ammo
+		self.scale = scale
+		self.mana = mana
+		self.fireballs = fireballs
 		self.shoot_cooldown = 0
-		self.grenades = grenades
 		self.health = 100
 		self.max_health = self.health
 		self.direction = 1
@@ -249,12 +241,12 @@ class Wizard(pygame.sprite.Sprite):
 
 
 	def shoot(self):
-		if self.shoot_cooldown == 0 and self.ammo > 0:
+		if self.shoot_cooldown == 0 and self.mana > 0:
 			self.shoot_cooldown = 20
 			bullet = Bullet(self.rect.centerx + (0.75 * self.rect.size[0] * self.direction), self.rect.centery, self.direction)
 			bullet_group.add(bullet)
-			#reduce ammo
-			self.ammo -= 1
+			#reduce mana
+			self.mana -= 1
 			shot_fx.play()
 
 
@@ -364,12 +356,12 @@ class World():
 					elif tile == 16:#create enemies
 						enemy = Wizard('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0)
 						enemy_group.add(enemy)
-					elif tile == 17:#create ammo box
-						item_box = ItemBox('Ammo', x * TILE_SIZE, y * TILE_SIZE)
+					elif tile == 17:#create mana box
+						item_box = ItemBox('Mana', x * TILE_SIZE, y * TILE_SIZE)
 						item_box_group.add(item_box)
-					elif tile == 18:#create grenade box
-						item_box = ItemBox('Grenade', x * TILE_SIZE, y * TILE_SIZE)
-						item_box_group.add(item_box)
+					#elif tile == 18:#create fireball box
+					#	item_box = ItemBox('Fireball', x * TILE_SIZE, y * TILE_SIZE)
+					#	item_box_group.add(item_box)
 					elif tile == 19:#create health box
 						item_box = ItemBox('Health', x * TILE_SIZE, y * TILE_SIZE)
 						item_box_group.add(item_box)
@@ -437,10 +429,10 @@ class ItemBox(pygame.sprite.Sprite):
 				player.health += 25
 				if player.health > player.max_health:
 					player.health = player.max_health
-			elif self.item_type == 'Ammo':
-				player.ammo += 15
-			elif self.item_type == 'Grenade':
-				player.grenades += 3
+			elif self.item_type == 'Mana':
+				player.mana += 15
+			elif self.item_type == 'Fireballs':
+				player.fireballs += 3
 			#delete the item box
 			self.kill()
 
@@ -495,13 +487,12 @@ class Bullet(pygame.sprite.Sprite):
 
 
 
-class Grenade(pygame.sprite.Sprite):
+class Fireball(pygame.sprite.Sprite):
 	def __init__(self, x, y, direction):
 		pygame.sprite.Sprite.__init__(self)
 		self.timer = 100
 		self.vel_y = -11
 		self.speed = 7
-		self.image = grenade_img
 		self.rect = self.image.get_rect()
 		self.rect.center = (x, y)
 		self.width = self.image.get_width()
@@ -532,7 +523,7 @@ class Grenade(pygame.sprite.Sprite):
 					dy = tile[1].top - self.rect.bottom	
 
 
-		#update grenade position
+		#update fireball position
 		self.rect.x += dx + screen_scroll
 		self.rect.y += dy
 
@@ -625,7 +616,7 @@ restart_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50,
 #create sprite groups
 enemy_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
-grenade_group = pygame.sprite.Group()
+fireball_group = pygame.sprite.Group()
 explosion_group = pygame.sprite.Group()
 item_box_group = pygame.sprite.Group()
 decoration_group = pygame.sprite.Group()
@@ -676,14 +667,14 @@ while run:
 		world.draw()
 		#show player health
 		health_bar.draw(player.health)
-		#show ammo
-		draw_text('AMMO: ', font, WHITE, 10, 35)
-		for x in range(player.ammo):
+		#show mana
+		draw_text('MANA: ', font, WHITE, 10, 35)
+		for x in range(player.mana):
 			screen.blit(bullet_img, (90 + (x * 10), 40))
-		#show grenades
-		draw_text('GRENADES: ', font, WHITE, 10, 60)
-		for x in range(player.grenades):
-			screen.blit(grenade_img, (135 + (x * 15), 60))
+		#show fireballs
+		#draw_text('FIREBALLS: ', font, WHITE, 10, 60)
+		#for x in range(player.fireballs):
+		#	screen.blit(grenade_img, (135 + (x * 15), 60))
 
 
 		player.update()
@@ -696,14 +687,14 @@ while run:
 
 		#update and draw groups
 		bullet_group.update()
-		grenade_group.update()
+		fireball_group.update()
 		explosion_group.update()
 		item_box_group.update()
 		decoration_group.update()
 		water_group.update()
 		exit_group.update()
 		bullet_group.draw(screen)
-		grenade_group.draw(screen)
+		fireball_group.draw(screen)
 		explosion_group.draw(screen)
 		item_box_group.draw(screen)
 		decoration_group.draw(screen)
@@ -722,14 +713,14 @@ while run:
 			#shoot bullets
 			if shoot:
 				player.shoot()
-			#throw grenades
-			elif grenade and grenade_thrown == False and player.grenades > 0:
-				grenade = Grenade(player.rect.centerx + (0.5 * player.rect.size[0] * player.direction),\
+			#shoot fireballs
+			elif Fireball and fireball_group == False and player.fireballs > 0:
+				fireball = Fireball(player.rect.centerx + (0.5 * player.rect.size[0] * player.direction),\
 				 			player.rect.top, player.direction)
-				grenade_group.add(grenade)
-				#reduce grenades
-				player.grenades -= 1
-				grenade_thrown = True
+				fireball_group.add(fireball)
+				#reduce fireballs
+				player.fireballs -= 1
+				fireball_shot = True
 			if player.in_air:
 				player.update_action(2)#2: jump
 			elif moving_left or moving_right:
@@ -784,7 +775,7 @@ while run:
 			if event.key == pygame.K_SPACE:
 				shoot = True
 			if event.key == pygame.K_q:
-				grenade = True
+				fireball = True
 			if event.key == pygame.K_w and player.alive:
 				player.jump = True
 				jump_fx.play()
@@ -801,8 +792,8 @@ while run:
 			if event.key == pygame.K_SPACE:
 				shoot = False
 			if event.key == pygame.K_q:
-				grenade = False
-				grenade_thrown = False
+				fireball = False
+				fireball_thrown = False
 
 
 	pygame.display.update()
