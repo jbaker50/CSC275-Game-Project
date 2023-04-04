@@ -30,12 +30,12 @@ grenade_thrown = False
 #pygame.mixer.music.load('audio/music2.mp3')
 #pygame.mixer.music.set_volume(0.3)
 #pygame.mixer.music.play(-1, 0.0, 5000)
-jump_fx = pygame.mixer.Sound('audio/jump.wav')
+jump_fx = pygame.mixer.Sound('audio/mixkit-air-woosh-1489.wav')
 jump_fx.set_volume(0.05)
-shot_fx = pygame.mixer.Sound('audio/shot.wav')
+shot_fx = pygame.mixer.Sound('audio/mixkit-magic-glitter-shot-2353.wav')
 shot_fx.set_volume(0.05)
-grenade_fx = pygame.mixer.Sound('audio/grenade.wav')
-grenade_fx.set_volume(0.05)
+#grenade_fx = pygame.mixer.Sound('audio/grenade.wav')
+#grenade_fx.set_volume(0.05)
 
 
 #load images
@@ -109,7 +109,7 @@ def reset_level():
 
 
 
-class Soldier(pygame.sprite.Sprite):
+class Wizard(pygame.sprite.Sprite):
 	def __init__(self, char_type, x, y, scale, speed, ammo, grenades):
 		pygame.sprite.Sprite.__init__(self)
 		self.alive = True
@@ -145,7 +145,7 @@ class Soldier(pygame.sprite.Sprite):
 			num_of_frames = len(os.listdir(f'img/{self.char_type}/{animation}'))
 			for i in range(num_of_frames):
 				img = pygame.image.load(f'img/{self.char_type}/{animation}/{i}.png').convert_alpha()
-				img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
+				img = pygame.transform.scale(img, (64,64))
 				temp_list.append(img)
 			self.animation_list.append(temp_list)
 
@@ -359,10 +359,10 @@ class World():
 						decoration = Decoration(img, x * TILE_SIZE, y * TILE_SIZE)
 						decoration_group.add(decoration)
 					elif tile == 15:#create player
-						player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
+						player = Wizard('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
 						health_bar = HealthBar(10, 10, player.health, player.health)
 					elif tile == 16:#create enemies
-						enemy = Soldier('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0)
+						enemy = Wizard('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0)
 						enemy_group.add(enemy)
 					elif tile == 17:#create ammo box
 						item_box = ItemBox('Ammo', x * TILE_SIZE, y * TILE_SIZE)
@@ -540,7 +540,7 @@ class Grenade(pygame.sprite.Sprite):
 		self.timer -= 1
 		if self.timer <= 0:
 			self.kill()
-			grenade_fx.play()
+			#grenade_fx.play()
 			explosion = Explosion(self.rect.x, self.rect.y, 0.5)
 			explosion_group.add(explosion)
 			#do damage to anyone that is nearby
