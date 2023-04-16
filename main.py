@@ -61,7 +61,10 @@ mana_box_img = pygame.image.load('img/icons/ammo_box.png').convert_alpha()
 item_boxes = {
 	'Health'	: health_box_img,
 	'Mana'		: mana_box_img,
-	'Items'		: health_box_img,
+	'Slime'		: health_box_img,
+	'Newt'		: health_box_img,
+	'Frog'		: health_box_img,
+	'Reed'		: health_box_img,
 }
 
 #define font
@@ -79,9 +82,9 @@ def draw_bg():
 		screen.blit(layer0, ((x * width) - bg_scroll, 0))
 		screen.blit(layer1, ((x * width) - bg_scroll, 0))
 		screen.blit(layer2, ((x * width) - bg_scroll, 0))
-		screen.blit(layer3, ((x * width) - bg_scroll, 0))
+		#screen.blit(layer3, ((x * width) - bg_scroll, 0))
 		screen.blit(layer4, ((x * width) - bg_scroll, 0))
-
+ 
 
 #function to reset level
 def reset_level():
@@ -104,13 +107,17 @@ def reset_level():
 
 
 class Wizard(pygame.sprite.Sprite):
-	def __init__(self, char_type, x, y, scale, speed, mana, fireballs):
+	def __init__(self, char_type, x, y, scale, speed, mana, fireballs, slime, newt, frog, reed):
 		pygame.sprite.Sprite.__init__(self)
 		self.alive = True
 		self.char_type = char_type
 		self.speed = speed
 		self.scale = scale
 		self.mana = mana
+		self.slime = slime
+		self.newt = newt
+		self.frog = frog
+		self.reed = reed
 		self.fireballs = fireballs
 		self.shoot_cooldown = 0
 		self.health = 100
@@ -353,23 +360,32 @@ class World():
 						decoration = Decoration(img, x * TILE_SIZE, y * TILE_SIZE)
 						decoration_group.add(decoration)
 					elif tile == 15:#create player
-						player = Wizard('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
+						player = Wizard('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5, 0, 0, 0, 0)
 						health_bar = HealthBar(10, 10, player.health, player.health)
 					elif tile == 16:#create enemies
-						enemy = Wizard('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0)
+						enemy = Wizard('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0, 0, 0, 0, 0)
 						enemy_group.add(enemy)
 					elif tile == 17:#create mana box
 						item_box = ItemBox('Mana', x * TILE_SIZE, y * TILE_SIZE)
 						item_box_group.add(item_box)
-					#elif tile == 18:#create fireball box
-					#	item_box = ItemBox('Fireball', x * TILE_SIZE, y * TILE_SIZE)
-					#	item_box_group.add(item_box)
+					elif tile == 18:#create slime box
+						item_box = ItemBox('Slime', x * TILE_SIZE, y * TILE_SIZE)
+						item_box_group.add(item_box)
 					elif tile == 19:#create health box
 						item_box = ItemBox('Health', x * TILE_SIZE, y * TILE_SIZE)
 						item_box_group.add(item_box)
 					elif tile == 20:#create exit
 						exit = Exit(img, x * TILE_SIZE, y * TILE_SIZE)
 						exit_group.add(exit)
+					elif tile == 21:#create newt
+						item_box = ItemBox('Newt', x * TILE_SIZE, y * TILE_SIZE)
+						item_box_group.add(item_box)
+					elif tile == 22:#create frog
+						item_box = ItemBox('Frog', x * TILE_SIZE, y * TILE_SIZE)
+						item_box_group.add(item_box)
+					elif tile == 23:#create reed
+						item_box = ItemBox('Reed', x * TILE_SIZE, y * TILE_SIZE)
+						item_box_group.add(item_box)
 
 		return player, health_bar
 
@@ -435,6 +451,14 @@ class ItemBox(pygame.sprite.Sprite):
 				player.mana += 15
 			elif self.item_type == 'Fireballs':
 				player.fireballs += 3
+			elif self.item_type == 'Slime':
+				player.slime += 1
+			elif self.item_type == 'Newt':
+				player.newt += 1
+			elif self.item_type == 'Frog':
+				player.frog += 1
+			elif self.item_type == 'Reed':
+				player.reed += 1
 			#delete the item box
 			self.kill()
 
@@ -641,6 +665,14 @@ with open(f'level{level}_data.csv', newline='') as csvfile:
 world = World()
 player, health_bar = world.process_data(world_data)
 
+item_box = ItemBox('Slime', 20, 160)
+item_box_group.add(item_box)
+item_box = ItemBox('Newt', 400, 240)
+item_box_group.add(item_box)
+item_box = ItemBox('Frog', 2250, 280)
+item_box_group.add(item_box)
+item_box = ItemBox('Reed', 3000, 320)
+item_box_group.add(item_box)
 
 
 run = True
@@ -677,6 +709,22 @@ while run:
 		#draw_text('FIREBALLS: ', font, WHITE, 10, 60)
 		#for x in range(player.fireballs):
 		#	screen.blit(grenade_img, (135 + (x * 15), 60))
+		#show slime pickup
+		draw_text('SLIME:', font, WHITE, 10, 85)
+		for x in range(player.slime):
+			screen.blit(health_box_img, (80 + (x * 15), 77))
+		# show newt pickup
+		draw_text('NEWT: ', font, WHITE, 10, 110)
+		for x in range(player.newt):
+			screen.blit(health_box_img, (60 + (x * 15), 100))
+		# show frog pickup
+		draw_text('FROG: ', font, WHITE, 10, 135)
+		for x in range(player.frog):
+			screen.blit(health_box_img, (60 + (x * 15), 120))
+		# show reed pickup
+		draw_text('REED: ', font, WHITE, 10, 160)
+		for x in range(player.reed):
+			screen.blit(health_box_img, (60 + (x * 15), 140))
 
 
 		player.update()
