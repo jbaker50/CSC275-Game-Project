@@ -243,8 +243,6 @@ class Wizard(pygame.sprite.Sprite):
 
 		return screen_scroll, level_complete
 
-
-
 	def shoot(self):
 		if self.shoot_cooldown == 0 and self.mana > 0:
 			self.shoot_cooldown = 20
@@ -308,8 +306,6 @@ class Wizard(pygame.sprite.Sprite):
 			else:
 				self.frame_index = 0
 
-
-
 	def update_action(self, new_action):
 		#check if the new action is different to the previous one
 		if new_action != self.action:
@@ -324,7 +320,13 @@ class Wizard(pygame.sprite.Sprite):
 			self.speed = 0
 			self.alive = False
 			self.update_action(3)
-
+   
+   
+	def kill(self) -> None:
+		rng = random.random()
+		if rng >= .5 and self.char_type == 'enemy':
+			#drop an item box
+			print('item dropped')
 
 	def draw(self):
 		screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
@@ -387,126 +389,7 @@ class World():
 		for tile in self.obstacle_list:
 			tile[1][0] += screen_scroll
 			screen.blit(tile[0], tile[1])
-
-
-class Decoration(pygame.sprite.Sprite):
-	def __init__(self, img, x, y):
-		pygame.sprite.Sprite.__init__(self)
-		self.image = img
-		self.rect = self.image.get_rect()
-		self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
-
-	def update(self):
-		self.rect.x += screen_scroll
-
-
-class Water(pygame.sprite.Sprite):
-	def __init__(self, img, x, y):
-		pygame.sprite.Sprite.__init__(self)
-		self.image = img
-		self.rect = self.image.get_rect()
-		self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
-
-	def update(self):
-		self.rect.x += screen_scroll
-
-class Exit(pygame.sprite.Sprite):
-	def __init__(self, img, x, y):
-		pygame.sprite.Sprite.__init__(self)
-		self.image = img
-		self.rect = self.image.get_rect()
-		self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
-
-	def update(self):
-		self.rect.x += screen_scroll
-
-
-class ItemBox(pygame.sprite.Sprite):
-	def __init__(self, item_type, x, y):
-		pygame.sprite.Sprite.__init__(self)
-		self.item_type = item_type
-		self.image = item_boxes[self.item_type]
-		self.rect = self.image.get_rect()
-		self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
-
-
-	def update(self):
-		#scroll
-		self.rect.x += screen_scroll
-		#check if the player has picked up the box
-		if pygame.sprite.collide_rect(self, player):
-			#check what kind of box it was
-			if self.item_type == 'Health':
-				player.health += 25
-				if player.health > player.max_health:
-					player.health = player.max_health
-			elif self.item_type == 'Mana':
-				player.mana += 15
-			elif self.item_type == 'Fireballs':
-				player.fireballs += 3
-			elif self.item_type == 'Slime':
-				player.slime += 1
-			elif self.item_type == 'Newt':
-				player.newt += 1
-			elif self.item_type == 'Frog':
-				player.frog += 1
-			elif self.item_type == 'Reed':
-				player.reed += 1
-			#delete the item box
-			self.kill()
-
-
-class HealthBar():
-	def __init__(self, x, y, health, max_health):
-		self.x = x
-		self.y = y
-		self.health = health
-		self.max_health = max_health
-
-	def draw(self, health):
-		#update with new health
-		self.health = health
-		#calculate health ratio
-		ratio = self.health / self.max_health
-		pygame.draw.rect(screen, BLACK, (self.x - 2, self.y - 2, 154, 24))
-		pygame.draw.rect(screen, RED, (self.x, self.y, 150, 20))
-		pygame.draw.rect(screen, GREEN, (self.x, self.y, 150 * ratio, 20))
-
-
-class Bullet(pygame.sprite.Sprite):
-	def __init__(self, x, y, direction):
-		pygame.sprite.Sprite.__init__(self)
-		self.speed = 10
-		self.image = bullet_img
-		self.rect = self.image.get_rect()
-		self.rect.center = (x, y)
-		self.direction = direction
-
-	def update(self):
-		#move bullet
-		self.rect.x += (self.direction * self.speed) + screen_scroll
-		#check if bullet has gone off screen
-		if self.rect.right < 0 or self.rect.left > SCREEN_WIDTH:
-			self.kill()
-		#check for collision with level
-		for tile in world.obstacle_list:
-			if tile[1].colliderect(self.rect):
-				self.kill()
-
-		#check collision with characters
-		if pygame.sprite.spritecollide(player, bullet_group, False):
-			if player.alive:
-				player.health -= 5
-				self.kill()
-		for enemy in enemy_group:
-			if pygame.sprite.spritecollide(enemy, bullet_group, False):
-				if enemy.alive:
-					enemy.health -= 25
-					self.kill()
-
-
-
-
+   
 class Fireball(pygame.sprite.Sprite):
 	def __init__(self, x, y, direction):
 		pygame.sprite.Sprite.__init__(self)
@@ -563,7 +446,36 @@ class Fireball(pygame.sprite.Sprite):
 					abs(self.rect.centery - enemy.rect.centery) < TILE_SIZE * 2:
 					enemy.health -= 50
 
+class Bullet(pygame.sprite.Sprite):
+	def __init__(self, x, y, direction):
+		pygame.sprite.Sprite.__init__(self)
+		self.speed = 10
+		self.image = bullet_img
+		self.rect = self.image.get_rect()
+		self.rect.center = (x, y)
+		self.direction = direction
 
+	def update(self):
+		#move bullet
+		self.rect.x += (self.direction * self.speed) + screen_scroll
+		#check if bullet has gone off screen
+		if self.rect.right < 0 or self.rect.left > SCREEN_WIDTH:
+			self.kill()
+		#check for collision with level
+		for tile in world.obstacle_list:
+			if tile[1].colliderect(self.rect):
+				self.kill()
+
+		#check collision with characters
+		if pygame.sprite.spritecollide(player, bullet_group, False):
+			if player.alive:
+				player.health -= 5
+				self.kill()
+		for enemy in enemy_group:
+			if pygame.sprite.spritecollide(enemy, bullet_group, False):
+				if enemy.alive:
+					enemy.health -= 25
+					self.kill()
 
 class Explosion(pygame.sprite.Sprite):
 	def __init__(self, x, y, scale):
@@ -578,7 +490,6 @@ class Explosion(pygame.sprite.Sprite):
 		self.rect = self.image.get_rect()
 		self.rect.center = (x, y)
 		self.counter = 0
-
 
 	def update(self):
 		#scroll
@@ -597,6 +508,85 @@ class Explosion(pygame.sprite.Sprite):
 			else:
 				self.image = self.images[self.frame_index]
 
+class Decoration(pygame.sprite.Sprite):
+	def __init__(self, img, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = img
+		self.rect = self.image.get_rect()
+		self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
+
+	def update(self):
+		self.rect.x += screen_scroll
+
+class Water(pygame.sprite.Sprite):
+	def __init__(self, img, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = img
+		self.rect = self.image.get_rect()
+		self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
+
+	def update(self):
+		self.rect.x += screen_scroll
+
+class Exit(pygame.sprite.Sprite):
+	def __init__(self, img, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = img
+		self.rect = self.image.get_rect()
+		self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
+
+	def update(self):
+		self.rect.x += screen_scroll
+
+class ItemBox(pygame.sprite.Sprite):
+	def __init__(self, item_type, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		self.item_type = item_type
+		self.image = item_boxes[self.item_type]
+		self.rect = self.image.get_rect()
+		self.rect.midtop = (x + TILE_SIZE // 2, y + (TILE_SIZE - self.image.get_height()))
+
+
+	def update(self):
+		#scroll
+		self.rect.x += screen_scroll
+		#check if the player has picked up the box
+		if pygame.sprite.collide_rect(self, player):
+			#check what kind of box it was
+			if self.item_type == 'Health':
+				player.health += 25
+				if player.health > player.max_health:
+					player.health = player.max_health
+			elif self.item_type == 'Mana':
+				player.mana += 15
+			elif self.item_type == 'Fireballs':
+				player.fireballs += 3
+			elif self.item_type == 'Slime':
+				player.slime += 1
+			elif self.item_type == 'Newt':
+				player.newt += 1
+			elif self.item_type == 'Frog':
+				player.frog += 1
+			elif self.item_type == 'Reed':
+				player.reed += 1
+			#delete the item box
+			self.kill()
+
+class HealthBar():
+	def __init__(self, x, y, health, max_health):
+		self.x = x
+		self.y = y
+		self.health = health
+		self.max_health = max_health
+
+	def draw(self, health):
+		#update with new health
+		self.health = health
+		#calculate health ratio
+		ratio = self.health / self.max_health
+		pygame.draw.rect(screen, BLACK, (self.x - 2, self.y - 2, 154, 24))
+		pygame.draw.rect(screen, RED, (self.x, self.y, 150, 20))
+		pygame.draw.rect(screen, GREEN, (self.x, self.y, 150 * ratio, 20))
 
 class ScreenFade():
 	def __init__(self, direction, colour, speed):
@@ -621,11 +611,9 @@ class ScreenFade():
 
 		return fade_complete
 
-
 #create screen fades
 intro_fade = ScreenFade(1, BLACK, 4)
 death_fade = ScreenFade(2, PINK, 4)
-
 
 #create buttons
 start_button = button.Button(SCREEN_WIDTH // 2 - 130, SCREEN_HEIGHT // 2 - 150, start_img, 1)
@@ -641,8 +629,6 @@ item_box_group = pygame.sprite.Group()
 decoration_group = pygame.sprite.Group()
 water_group = pygame.sprite.Group()
 exit_group = pygame.sprite.Group()
-
-
 
 #create empty tile list
 world_data = []
@@ -666,7 +652,6 @@ item_box = ItemBox('Frog', 2250, 280)
 item_box_group.add(item_box)
 item_box = ItemBox('Reed', 3000, 320)
 item_box_group.add(item_box)
-
 
 run = True
 while run:
@@ -738,13 +723,16 @@ while run:
 		decoration_group.draw(screen)
 		water_group.draw(screen)
 		exit_group.draw(screen)
+  
+		for enemy in enemy_group:
+			if enemy.health <= 0:
+				enemy.kill()
 
 		#show intro
 		if start_intro == True:
 			if intro_fade.fade():
 				start_intro = False
 				intro_fade.fade_counter = 0
-
 
 		#update player actions
 		if player.alive:
@@ -799,7 +787,6 @@ while run:
 					world = World()
 					player, health_bar = world.process_data(world_data)
 
-
 	for event in pygame.event.get():
 		#quit game
 		if event.type == pygame.QUIT:
@@ -819,7 +806,6 @@ while run:
 				jump_fx.play()
 			if event.key == pygame.K_ESCAPE:
 				run = False
-
 
 		#keyboard button released
 		if event.type == pygame.KEYUP:

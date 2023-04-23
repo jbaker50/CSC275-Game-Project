@@ -8,6 +8,8 @@ from settings import *
 from sprites import *
 from tilemap import *
 from load import TiledMap
+from settings import *
+from wotv_files_2.wotv_files.settings import LEVEL_MAP
 
 #setup, initializing variables and screen
 #mixer.init()
@@ -39,7 +41,7 @@ class Game:
     def run(self):
         run = True
         while run:
-            self.dt = self.clock.tick(FPS) /1000.0
+            self.dt = self.clock.tick(FPS) / 1000.0
             self.events()
 
             self.screen.fill(RED)
