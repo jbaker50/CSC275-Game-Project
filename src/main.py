@@ -143,6 +143,8 @@ class Wizard(pygame.sprite.Sprite):
 		self.vision = pygame.Rect(0, 0, 150, 20)
 		self.idling = False
 		self.idling_counter = 0
+		self.damageCooldown = 0
+		self.timeSinceLastHit = 0
 		
 		#load all images for the players
 		animation_types = ['Idle', 'Run', 'Jump', 'Death']
@@ -266,16 +268,26 @@ class Wizard(pygame.sprite.Sprite):
 
 	def ai(self):
 		if self.alive and player.alive:
+			if self.rect.colliderect(player.rect) and self.damageCooldown == 0:
+				player.health -= 10
+				self.timeSinceLastHit = 0
+	
+			self.damageCooldown = ((self.damageCooldown + 1) % 100)
+			self.timeSinceLastHit += 1
+   
+			if self.timeSinceLastHit > 100:
+				self.damageCooldown = 0
+    
 			if self.idling == False and random.randint(1, 200) == 1:
 				self.update_action(0)#0: idle
 				self.idling = True
 				self.idling_counter = 50
 			#check if the ai in near the player
-			if self.vision.colliderect(player.rect):
+			# if self.vision.colliderect(player.rect):
 				#stop running and face the player
-				self.update_action(0)#0: idle
+				# self.update_action(0)#0: idle
 				#shoot
-				self.shoot()
+				# self.shoot()
 			else:
 				if self.idling == False:
 					if self.direction == 1:
@@ -713,9 +725,9 @@ while run:
 				moving_left = True
 			if event.key == pygame.K_d:
 				moving_right = True
-			if event.key == pygame.K_SPACE:
+			if event.key == pygame.K_LSHIFT:
 				shoot = True
-			if event.key == pygame.K_w and player.alive:
+			if event.key == pygame.K_SPACE and player.alive:
 				player.jump = True
 				jump_fx.play()
 			if event.key == pygame.K_ESCAPE:
@@ -727,7 +739,7 @@ while run:
 				moving_left = False
 			if event.key == pygame.K_d:
 				moving_right = False
-			if event.key == pygame.K_SPACE:
+			if event.key == pygame.K_LSHIFT:
 				shoot = False
 
 	pygame.display.update()

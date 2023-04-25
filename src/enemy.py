@@ -18,7 +18,6 @@ class Enemy(pg.sprite.Sprite):
         self.newt = newt
         self.frog = frog
         self.reed = reed
-        # self.fireballs = fireballs
         self.shoot_cooldown = 0
         self.health = 100
         self.max_health = self.health
