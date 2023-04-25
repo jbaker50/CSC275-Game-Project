@@ -5,7 +5,7 @@ from main import *
 
 class Enemy(pg.sprite.Sprite):
     
-    def __init__(self, x, y, scale, speed, mana, fireballs, slime, newt, frog, reed) -> None:
+    def __init__(self, x, y, scale, speed, mana, slime, newt, frog, reed) -> None:
         '''Put pass in parameters in the construction to inject parameters.
         Ex: location, size, respective map, health, item drops'''
         pg.sprite.Sprite.__init__(self)
@@ -18,7 +18,7 @@ class Enemy(pg.sprite.Sprite):
         self.newt = newt
         self.frog = frog
         self.reed = reed
-        self.fireballs = fireballs
+        # self.fireballs = fireballs
         self.shoot_cooldown = 0
         self.health = 100
         self.max_health = self.health

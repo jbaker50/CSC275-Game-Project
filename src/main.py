@@ -52,7 +52,6 @@ for x in range(TILE_TYPES):
 	img_list.append(img)
 #bullet
 bullet_img = pygame.image.load('img/icons/bullet.png').convert_alpha()
-#fireball
 #pick up boxes
 
 health_box_img = pygame.image.load('img/icons/health_box.png').convert_alpha()
@@ -66,6 +65,14 @@ item_boxes = {
 	'Newt'		: health_box_img,
 	'Frog'		: health_box_img,
 	'Reed'		: health_box_img,
+	'Ectoplasm' : health_box_img,
+	'Bat Wing'	: health_box_img
+}
+
+power_ups = {
+	'High Jump'	: health_box_img,
+	'Fast Run'	: health_box_img,
+	'Slow Fall'	: health_box_img
 }
 
 #define font
@@ -105,7 +112,7 @@ def reset_level():
 	return data
 
 class Wizard(pygame.sprite.Sprite):
-	def __init__(self, char_type, x, y, scale, speed, mana, fireballs, slime, newt, frog, reed, dropped):
+	def __init__(self, char_type, x, y, scale, speed, mana, slime, newt, frog, reed, ectoplasm, bat_wing, dropped):
 		pygame.sprite.Sprite.__init__(self)
 		self.alive = True
 		self.char_type = char_type
@@ -116,7 +123,8 @@ class Wizard(pygame.sprite.Sprite):
 		self.newt = newt
 		self.frog = frog
 		self.reed = reed
-		self.fireballs = fireballs
+		self.ectoplasm = ectoplasm
+		self.bat_wing = bat_wing
 		self.shoot_cooldown = 0
 		self.health = 100
 		self.max_health = self.health
@@ -360,10 +368,10 @@ class World():
 						decoration = Decoration(img, x * TILE_SIZE, y * TILE_SIZE)
 						decoration_group.add(decoration)
 					elif tile == 15:#create player
-						player = Wizard('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5, 0, 0, 0, 0, False)
+						player = Wizard('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 0, 0, 0, 0, 0, 0, False)
 						health_bar = HealthBar(10, 10, player.health, player.health)
 					elif tile == 16:#create enemies
-						enemy = Wizard('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0, 0, 0, 0, 0, False)
+						enemy = Wizard('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0, 0, 0, 0, 0, 0, False)
 						enemy_group.add(enemy)
 					elif tile == 17:#create mana box
 						item_box = ItemBox('Mana', x * TILE_SIZE, y * TILE_SIZE)
@@ -386,6 +394,12 @@ class World():
 					elif tile == 23:#create reed
 						item_box = ItemBox('Reed', x * TILE_SIZE, y * TILE_SIZE)
 						item_box_group.add(item_box)
+					elif tile == 24:#create ectoplasm
+						item_box = ItemBox('Ectoplasm', x * TILE_SIZE, y * TILE_SIZE)
+						item_box_group.add(item_box)
+					elif tile == 25:#create bat wing
+						item_box = ItemBox('Bat Wing', x * TILE_SIZE, y * TILE_SIZE)
+						item_box_group.add(item_box)
 
 		return player, health_bar
 
@@ -395,62 +409,6 @@ class World():
 			tile[1][0] += screen_scroll
 			screen.blit(tile[0], tile[1])
    
-class Fireball(pygame.sprite.Sprite):
-	def __init__(self, x, y, direction):
-		pygame.sprite.Sprite.__init__(self)
-		self.timer = 100
-		self.vel_y = -11
-		self.speed = 7
-		self.rect = self.image.get_rect()
-		self.rect.center = (x, y)
-		self.width = self.image.get_width()
-		self.height = self.image.get_height()
-		self.direction = direction
-
-	def update(self):
-		self.vel_y += GRAVITY
-		dx = self.direction * self.speed
-		dy = self.vel_y
-
-		#check for collision with level
-		for tile in world.obstacle_list:
-			#check collision with walls
-			if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
-				self.direction *= -1
-				dx = self.direction * self.speed
-			#check for collision in the y direction
-			if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
-				self.speed = 0
-				#check if below the ground, i.e. thrown up
-				if self.vel_y < 0:
-					self.vel_y = 0
-					dy = tile[1].bottom - self.rect.top
-				#check if above the ground, i.e. falling
-				elif self.vel_y >= 0:
-					self.vel_y = 0
-					dy = tile[1].top - self.rect.bottom	
-
-
-		#update fireball position
-		self.rect.x += dx + screen_scroll
-		self.rect.y += dy
-
-		#countdown timer
-		self.timer -= 1
-		if self.timer <= 0:
-			self.kill()
-			#grenade_fx.play()
-			explosion = Explosion(self.rect.x, self.rect.y, 0.5)
-			explosion_group.add(explosion)
-			#do damage to anyone that is nearby
-			if abs(self.rect.centerx - player.rect.centerx) < TILE_SIZE * 2 and \
-				abs(self.rect.centery - player.rect.centery) < TILE_SIZE * 2:
-				player.health -= 50
-			for enemy in enemy_group:
-				if abs(self.rect.centerx - enemy.rect.centerx) < TILE_SIZE * 2 and \
-					abs(self.rect.centery - enemy.rect.centery) < TILE_SIZE * 2:
-					enemy.health -= 50
-
 class Bullet(pygame.sprite.Sprite):
 	def __init__(self, x, y, direction):
 		pygame.sprite.Sprite.__init__(self)
@@ -481,37 +439,6 @@ class Bullet(pygame.sprite.Sprite):
 				if enemy.alive:
 					enemy.health -= 25
 					self.kill()
-
-class Explosion(pygame.sprite.Sprite):
-	def __init__(self, x, y, scale):
-		pygame.sprite.Sprite.__init__(self)
-		self.images = []
-		for num in range(1, 6):
-			img = pygame.image.load(f'img/explosion/exp{num}.png').convert_alpha()
-			img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
-			self.images.append(img)
-		self.frame_index = 0
-		self.image = self.images[self.frame_index]
-		self.rect = self.image.get_rect()
-		self.rect.center = (x, y)
-		self.counter = 0
-
-	def update(self):
-		#scroll
-		self.rect.x += screen_scroll
-
-		EXPLOSION_SPEED = 4
-		#update explosion amimation
-		self.counter += 1
-
-		if self.counter >= EXPLOSION_SPEED:
-			self.counter = 0
-			self.frame_index += 1
-			#if the animation is complete then delete the explosion
-			if self.frame_index >= len(self.images):
-				self.kill()
-			else:
-				self.image = self.images[self.frame_index]
 
 class Decoration(pygame.sprite.Sprite):
 	def __init__(self, img, x, y):
@@ -564,8 +491,6 @@ class ItemBox(pygame.sprite.Sprite):
 					player.health = player.max_health
 			elif self.item_type == 'Mana':
 				player.mana += 15
-			elif self.item_type == 'Fireballs':
-				player.fireballs += 3
 			elif self.item_type == 'Slime':
 				self.dropped = False
 			elif self.item_type == 'Newt':
@@ -574,6 +499,10 @@ class ItemBox(pygame.sprite.Sprite):
 				player.frog += 1
 			elif self.item_type == 'Reed':
 				player.reed += 1
+			elif self.item_type == 'Ectoplasm':
+				player.ectoplasm += 1
+			elif self.item_type == 'Bat Wing':
+				player.ectoplasm += 1
 			#delete the item box
 			self.kill()
 
@@ -628,8 +557,6 @@ restart_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50,
 #create sprite groups
 enemy_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
-fireball_group = pygame.sprite.Group()
-explosion_group = pygame.sprite.Group()
 item_box_group = pygame.sprite.Group()
 decoration_group = pygame.sprite.Group()
 water_group = pygame.sprite.Group()
@@ -683,10 +610,6 @@ while run:
 		draw_text('MANA: ', font, WHITE, 10, 35)
 		for x in range(player.mana):
 			screen.blit(bullet_img, (90 + (x * 10), 40))
-		#show fireballs
-		#draw_text('FIREBALLS: ', font, WHITE, 10, 60)
-		#for x in range(player.fireballs):
-		#	screen.blit(grenade_img, (135 + (x * 15), 60))
 		#show slime pickup
 		draw_text('SLIME:', font, WHITE, 10, 85)
 		for x in range(player.slime):
@@ -715,15 +638,11 @@ while run:
 
 		#update and draw groups
 		bullet_group.update()
-		fireball_group.update()
-		explosion_group.update()
 		item_box_group.update()
 		decoration_group.update()
 		water_group.update()
 		exit_group.update()
 		bullet_group.draw(screen)
-		fireball_group.draw(screen)
-		explosion_group.draw(screen)
 		item_box_group.draw(screen)
 		decoration_group.draw(screen)
 		water_group.draw(screen)
@@ -744,14 +663,6 @@ while run:
 			#shoot bullets
 			if shoot:
 				player.shoot()
-			#shoot fireballs
-			elif Fireball and fireball_group == False and player.fireballs > 0:
-				fireball = Fireball(player.rect.centerx + (0.5 * player.rect.size[0] * player.direction),\
-				 			player.rect.top, player.direction)
-				fireball_group.add(fireball)
-				#reduce fireballs
-				player.fireballs -= 1
-				fireball_shot = True
 			if player.in_air:
 				player.update_action(2)#2: jump
 			elif moving_left or moving_right:
@@ -804,8 +715,6 @@ while run:
 				moving_right = True
 			if event.key == pygame.K_SPACE:
 				shoot = True
-			if event.key == pygame.K_q:
-				fireball = True
 			if event.key == pygame.K_w and player.alive:
 				player.jump = True
 				jump_fx.play()
@@ -820,10 +729,6 @@ while run:
 				moving_right = False
 			if event.key == pygame.K_SPACE:
 				shoot = False
-			if event.key == pygame.K_q:
-				fireball = False
-				fireball_thrown = False
-
 
 	pygame.display.update()
 
