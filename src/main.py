@@ -7,6 +7,7 @@ import random
 import csv
 import button
 from settings import *
+vec = pygame.math.Vector2
 
 mixer.init()
 pygame.init()
@@ -56,6 +57,7 @@ bullet_img = pygame.image.load('img/icons/bullet.png').convert_alpha()
 
 health_box_img = pygame.image.load('img/icons/health_box.png').convert_alpha()
 mana_box_img = pygame.image.load('img/icons/ammo_box.png').convert_alpha()
+slime_drop_img = pygame.image.load('img/icons/ammo_box.png').convert_alpha()
 
 item_boxes = {
 	'Health'	: health_box_img,
@@ -103,7 +105,7 @@ def reset_level():
 	return data
 
 class Wizard(pygame.sprite.Sprite):
-	def __init__(self, char_type, x, y, scale, speed, mana, fireballs, slime, newt, frog, reed):
+	def __init__(self, char_type, x, y, scale, speed, mana, fireballs, slime, newt, frog, reed, dropped):
 		pygame.sprite.Sprite.__init__(self)
 		self.alive = True
 		self.char_type = char_type
@@ -123,6 +125,7 @@ class Wizard(pygame.sprite.Sprite):
 		self.jump = False
 		self.in_air = True
 		self.flip = False
+		self.dropped = False
 		self.animation_list = []
 		self.frame_index = 0
 		self.action = 0
@@ -324,9 +327,11 @@ class Wizard(pygame.sprite.Sprite):
    
 	def kill(self) -> None:
 		rng = random.random()
-		if rng >= .5 and self.char_type == 'enemy':
-			#drop an item box
-			print('item dropped')
+		if rng >= .5 and self.char_type == 'enemy' and not self.dropped:
+			player.slime += 1
+			self.dropped = True
+			#screen.blit(slime_drop_img, self.)
+			#screen.blit(self.splat, self.pos - vec(32, 32))
 
 	def draw(self):
 		screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
@@ -355,17 +360,17 @@ class World():
 						decoration = Decoration(img, x * TILE_SIZE, y * TILE_SIZE)
 						decoration_group.add(decoration)
 					elif tile == 15:#create player
-						player = Wizard('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5, 0, 0, 0, 0)
+						player = Wizard('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5, 0, 0, 0, 0, False)
 						health_bar = HealthBar(10, 10, player.health, player.health)
 					elif tile == 16:#create enemies
-						enemy = Wizard('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0, 0, 0, 0, 0)
+						enemy = Wizard('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0, 0, 0, 0, 0, False)
 						enemy_group.add(enemy)
 					elif tile == 17:#create mana box
 						item_box = ItemBox('Mana', x * TILE_SIZE, y * TILE_SIZE)
 						item_box_group.add(item_box)
-					#elif tile == 18:#create slime box
-					#	item_box = ItemBox('Slime', x * TILE_SIZE, y * TILE_SIZE)
-					#	item_box_group.add(item_box)
+					elif tile == 18:#create slime box
+						item_box = ItemBox('Slime', x * TILE_SIZE, y * TILE_SIZE)
+						item_box_group.add(item_box)
 					elif tile == 19:#create health box
 						item_box = ItemBox('Health', x * TILE_SIZE, y * TILE_SIZE)
 						item_box_group.add(item_box)
@@ -562,7 +567,7 @@ class ItemBox(pygame.sprite.Sprite):
 			elif self.item_type == 'Fireballs':
 				player.fireballs += 3
 			elif self.item_type == 'Slime':
-				player.slime += 1
+				self.dropped = False
 			elif self.item_type == 'Newt':
 				player.newt += 1
 			elif self.item_type == 'Frog':

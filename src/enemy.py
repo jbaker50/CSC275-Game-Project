@@ -1,6 +1,7 @@
 import pygame as pg
 import random;
 import os
+from main import *
 
 class Enemy(pg.sprite.Sprite):
     
@@ -54,18 +55,6 @@ class Enemy(pg.sprite.Sprite):
         self.rect.center = (x, y)
         self.width = self.image.get_width()
         self.height = self.image.get_height()
-    
-    def kill(self) -> None:
-        if self.rollItemChance():
-            # Will need to put the item on the screen
-            pass
-        
-        return super.kill()
-    
-    def rollItemChance(self) -> bool:
-        rng = random.random()
-        
-        return True if rng > .5 else False
     
     def ai(self):
         if self.alive :#and player.alive:
