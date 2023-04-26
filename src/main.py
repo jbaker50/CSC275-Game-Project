@@ -215,7 +215,7 @@ class Wizard(pygame.sprite.Sprite):
 			if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
 				dx = 0
 				#if the ai has hit a wall then make it turn around
-				if self.char_type == 'enemy':
+				if self.char_type == 'enemy' or self.char_type == 'Slime enemy' or self.char_type == 'Ghost enemy' or self.char_type == 'Bat enemy':
 					self.direction *= -1
 					self.move_counter = 0
 			#check for collision in the y direction
@@ -361,11 +361,23 @@ class Wizard(pygame.sprite.Sprite):
 			player.update()
    
 		rng = random.random()
-  
-		if rng >= .75 and player.frog == 0:
-			player.frog += 1		
+		if rng >= .5 and player.ectoplasm == 0:
+			player.slime += 1
 			player.itemsGotten += 1
 			player.update()
+	
+		rng = random.random()
+		if rng >= .5 and player.bat_wing == 0:
+			player.slime += 1
+			player.itemsGotten += 1
+			player.update()
+   
+		#rng = random.random()
+  
+		# if rng >= .75 and player.frog == 0:
+		# 	player.frog += 1		
+		# 	player.itemsGotten += 1
+		# 	player.update()
    
 		print(f'RNG Seed: {rng}')
 		print(f'Player item count: {player.itemsGotten}')
@@ -431,6 +443,15 @@ class World():
 						item_box_group.add(item_box)
 					elif tile == 25:#create bat wing
 						item_box = ItemBox('Bat Wing', x * TILE_SIZE, y * TILE_SIZE)
+						item_box_group.add(item_box)
+					elif tile == 26:#create slime enemy
+						item_box = ItemBox('Slime enemy', x * TILE_SIZE, y * TILE_SIZE)
+						item_box_group.add(item_box)
+					elif tile == 27:#create slime enemy
+						item_box = ItemBox('Ghost enemy', x * TILE_SIZE, y * TILE_SIZE)
+						item_box_group.add(item_box)
+					elif tile == 28:#create slime enemy
+						item_box = ItemBox('Bat enemy', x * TILE_SIZE, y * TILE_SIZE)
 						item_box_group.add(item_box)
 
 		return player, health_bar
