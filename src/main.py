@@ -9,6 +9,9 @@ import button
 from settings import *
 vec = pygame.math.Vector2
 
+LEVEL = 1
+
+
 mixer.init()
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -47,7 +50,7 @@ layer4 = pygame.image.load('levels/swamp_resources/2 Background/Layers/4.png').c
 #store tiles in a list
 img_list = []
 for x in range(TILE_TYPES):
-	img = pygame.image.load(f'img/Tile/{x}.png')
+	img = pygame.image.load(f'img/tile/{x}.png')
 	img = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE))
 	img_list.append(img)
 #bullet
@@ -145,6 +148,8 @@ class Wizard(pygame.sprite.Sprite):
 		self.idling_counter = 0
 		self.damageCooldown = 0
 		self.timeSinceLastHit = 0
+		self.itemsGotten = 0
+		self.jumpPowerUp = False
 		
 		#load all images for the players
 		animation_types = ['Idle', 'Run', 'Jump', 'Death']
@@ -169,6 +174,8 @@ class Wizard(pygame.sprite.Sprite):
 	def update(self):
 		self.update_animation()
 		self.check_alive()
+		if self.itemsGotten >= 5:
+			self.jumpPowerUp = True
 		#update cooldown
 		if self.shoot_cooldown > 0:
 			self.shoot_cooldown -= 1
@@ -192,7 +199,7 @@ class Wizard(pygame.sprite.Sprite):
 
 		#jump
 		if self.jump == True and self.in_air == False:
-			self.vel_y = -11
+			self.vel_y = -11 if not self.jumpPowerUp else -22
 			self.jump = False
 			self.in_air = True
 
@@ -230,13 +237,13 @@ class Wizard(pygame.sprite.Sprite):
 
 		#check for collision with exit
 		level_complete = False
-		if pygame.sprite.spritecollide(self, exit_group, False):
+		# TODO: change number of items
+		if pygame.sprite.spritecollide(self, exit_group, False) and player.itemsGotten >= 1:
 			level_complete = True
 
 		#check if fallen off the map
 		if self.rect.bottom > SCREEN_HEIGHT:
 			self.health = 0
-
 
 		#check if going off the edges of the screen
 		if self.char_type == 'player':
@@ -264,7 +271,6 @@ class Wizard(pygame.sprite.Sprite):
 			#reduce mana
 			self.mana -= 1
 			shot_fx.play()
-
 
 	def ai(self):
 		if self.alive and player.alive:
@@ -312,7 +318,6 @@ class Wizard(pygame.sprite.Sprite):
 		#scroll
 		self.rect.x += screen_scroll
 
-
 	def update_animation(self):
 		#update animation
 		ANIMATION_COOLDOWN = 100
@@ -346,10 +351,25 @@ class Wizard(pygame.sprite.Sprite):
    
    
 	def kill(self) -> None:
+		if self.char_type != 'enemy':
+			return 
+
 		rng = random.random()
-		if rng >= .5 and self.char_type == 'enemy' and not self.dropped:
+		if rng >= .5 and player.slime == 0:
 			player.slime += 1
-			self.dropped = True
+			player.itemsGotten += 1
+			player.update()
+   
+		rng = random.random()
+  
+		if rng >= .75 and player.frog == 0:
+			player.frog += 1		
+			player.itemsGotten += 1
+			player.update()
+   
+		print(f'RNG Seed: {rng}')
+		print(f'Player item count: {player.itemsGotten}')
+		# if 
 			#screen.blit(slime_drop_img, self.)
 			#screen.blit(self.splat, self.pos - vec(32, 32))
 
@@ -400,7 +420,7 @@ class World():
 					elif tile == 21:#create newt
 						item_box = ItemBox('Newt', x * TILE_SIZE, y * TILE_SIZE)
 						item_box_group.add(item_box)
-					elif tile == 22:#create frog
+					elif tile == 22:#create frogS
 						item_box = ItemBox('Frog', x * TILE_SIZE, y * TILE_SIZE)
 						item_box_group.add(item_box)
 					elif tile == 23:#create reed
@@ -445,11 +465,20 @@ class Bullet(pygame.sprite.Sprite):
 		if pygame.sprite.spritecollide(player, bullet_group, False):
 			if player.alive:
 				player.health -= 5
+
+				if player.health <= 0:
+					player.kill()
+ 
 				self.kill()
+    
 		for enemy in enemy_group:
 			if pygame.sprite.spritecollide(enemy, bullet_group, False):
 				if enemy.alive:
 					enemy.health -= 25
+	
+					if enemy.health <= 0:
+						enemy.kill()
+     
 					self.kill()
 
 class Decoration(pygame.sprite.Sprite):
@@ -505,17 +534,28 @@ class ItemBox(pygame.sprite.Sprite):
 				player.mana += 15
 			elif self.item_type == 'Slime':
 				self.dropped = False
+				player.itemsGotten += 1
 			elif self.item_type == 'Newt':
 				player.newt += 1
+				player.itemsGotten += 1
 			elif self.item_type == 'Frog':
 				player.frog += 1
+				player.itemsGotten += 1
 			elif self.item_type == 'Reed':
 				player.reed += 1
+				player.itemsGotten += 1
+			# in the second level
 			elif self.item_type == 'Ectoplasm':
 				player.ectoplasm += 1
+				player.itemsGotten += 1
+    
+			# in the third level
 			elif self.item_type == 'Bat Wing':
 				player.ectoplasm += 1
+				player.itemsGotten += 1
+
 			#delete the item box
+			print(f'Items gotten: {player.itemsGotten}')
 			self.kill()
 
 class HealthBar():
@@ -588,14 +628,14 @@ with open(f'level{level}_data.csv', newline='') as csvfile:
 world = World()
 player, health_bar = world.process_data(world_data)
 
-item_box = ItemBox('Slime', 20, 160)
-item_box_group.add(item_box)
-item_box = ItemBox('Newt', 400, 240)
-item_box_group.add(item_box)
-item_box = ItemBox('Frog', 2250, 280)
-item_box_group.add(item_box)
-item_box = ItemBox('Reed', 3000, 320)
-item_box_group.add(item_box)
+# item_box = ItemBox('Slime', 20, 160)
+# item_box_group.add(item_box)
+# item_box = ItemBox('Newt', 400, 240)
+# item_box_group.add(item_box)
+# item_box = ItemBox('Frog', 2250, 280)
+# item_box_group.add(item_box)
+# item_box = ItemBox('Reed', 3000, 320)
+# item_box_group.add(item_box)
 
 run = True
 while run:
@@ -660,9 +700,10 @@ while run:
 		water_group.draw(screen)
 		exit_group.draw(screen)
   
-		for enemy in enemy_group:
-			if enemy.health <= 0:
-				enemy.kill()
+		# for enemy in enemy_group:
+		# 	if enemy.health <= 0:
+		# 		enemy.kill()
+		# 		break
 
 		#show intro
 		if start_intro == True:
@@ -721,13 +762,16 @@ while run:
 			run = False
 		#keyboard presses
 		if event.type == pygame.KEYDOWN:
+			if event.key == pygame.K_0:
+				player.jumpPowerUp = not player.jumpPowerUp
+    
 			if event.key == pygame.K_a:
 				moving_left = True
 			if event.key == pygame.K_d:
 				moving_right = True
-			if event.key == pygame.K_LSHIFT:
+			if event.key == pygame.K_SPACE:
 				shoot = True
-			if event.key == pygame.K_SPACE and player.alive:
+			if event.key == pygame.K_w and player.alive:
 				player.jump = True
 				jump_fx.play()
 			if event.key == pygame.K_ESCAPE:
@@ -739,7 +783,7 @@ while run:
 				moving_left = False
 			if event.key == pygame.K_d:
 				moving_right = False
-			if event.key == pygame.K_LSHIFT:
+			if event.key == pygame.K_SPACE:
 				shoot = False
 
 	pygame.display.update()
