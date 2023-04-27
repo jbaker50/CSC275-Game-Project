@@ -1,4 +1,5 @@
 # CSC275-Game-Project
+WIZARD OF THE VALLEY
 
 - Our game is called Wizard of the Valley. You play as a Wizard who is trying to collect ingredients for potions
   as a way to get rid of the enemies in the Valley.
