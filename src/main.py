@@ -11,7 +11,6 @@ vec = pygame.math.Vector2
 
 LEVEL = 1
 
-
 mixer.init()
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -35,7 +34,7 @@ jump_fx.set_volume(0.05)
 shot_fx = pygame.mixer.Sound('audio/mixkit-magic-glitter-shot-2353.wav')
 shot_fx.set_volume(0.05)
 
-#load images
+#load imagesd
 #button images
 start_img = pygame.image.load('img/start_btn.png').convert_alpha()
 exit_img = pygame.image.load('img/exit_btn.png').convert_alpha()
@@ -57,19 +56,25 @@ for x in range(TILE_TYPES):
 bullet_img = pygame.image.load('img/icons/bullet.png').convert_alpha()
 #pick up boxes
 
-health_box_img = pygame.image.load('img/icons/health_box.png').convert_alpha()
-mana_box_img = pygame.image.load('img/icons/ammo_box.png').convert_alpha()
-slime_drop_img = pygame.image.load('img/icons/ammo_box.png').convert_alpha()
+health_box_img = pygame.image.load('img/tile/19.png').convert_alpha()
+mana_box_img = pygame.image.load('img/tile/17.png').convert_alpha()
+slime_drop_img = pygame.image.load('img/tile/26.png').convert_alpha()
+ghost_drop_img = pygame.image.load('img/tile/26.png').convert_alpha()
+bat_drop_img = pygame.image.load('img/tile/26.png').convert_alpha()
+newt_img = pygame.image.load('img/tile/21.png').convert_alpha()
+frog_img = pygame.image.load('img/tile/22.png').convert_alpha()
+reed_img = pygame.image.load('img/tile/23.png').convert_alpha()
+
 
 item_boxes = {
 	'Health'	: health_box_img,
 	'Mana'		: mana_box_img,
-	'Slime'		: health_box_img,
-	'Newt'		: health_box_img,
-	'Frog'		: health_box_img,
-	'Reed'		: health_box_img,
-	'Ectoplasm' : health_box_img,
-	'Bat Wing'	: health_box_img
+	'Slime'		: slime_drop_img,
+	'Newt'		: newt_img,
+	'Frog'		: frog_img,
+	'Reed'		: reed_img,
+	'Ectoplasm' : ghost_drop_img,
+	'Bat Wing'	: bat_drop_img
 }
 
 power_ups = {
@@ -105,7 +110,7 @@ def reset_level():
 	decoration_group.empty()
 	water_group.empty()
 	exit_group.empty()
-
+	
 	#create empty tile list
 	data = []
 	for row in range(ROWS):
@@ -117,6 +122,7 @@ def reset_level():
 class Wizard(pygame.sprite.Sprite):
 	def __init__(self, char_type, x, y, scale, speed, mana, slime, newt, frog, reed, ectoplasm, bat_wing, dropped):
 		pygame.sprite.Sprite.__init__(self)
+		self.currentLevel = 1
 		self.alive = True
 		self.char_type = char_type
 		self.speed = speed
@@ -150,6 +156,11 @@ class Wizard(pygame.sprite.Sprite):
 		self.timeSinceLastHit = 0
 		self.itemsGotten = 0
 		self.jumpPowerUp = False
+		self.speedPowerUp = False
+		self.fallPowerUp = False
+		self.slimesKilled = 0
+		self.batsKilled = 0
+		self.ghostsKilled = 0
 		
 		#load all images for the players
 		animation_types = ['Idle', 'Run', 'Jump', 'Death']
@@ -174,12 +185,20 @@ class Wizard(pygame.sprite.Sprite):
 	def update(self):
 		self.update_animation()
 		self.check_alive()
-		if self.itemsGotten >= 5:
+		if self.slimesKilled >= 5:
 			self.jumpPowerUp = True
+   
+		if self.ghostsKilled >= 3:
+			self.fallPowerUp = True
+   
+		if self.batsKilled >= 2:
+			self.speedPowerUp = True
 		#update cooldown
 		if self.shoot_cooldown > 0:
 			self.shoot_cooldown -= 1
 
+	def disableAllPowerups(self) -> None:
+		self.fallPowerUp = self.jumpPowerUp = self.speedPowerUp = False
 
 	def move(self, moving_left, moving_right):
 		#reset movement variables
@@ -189,25 +208,26 @@ class Wizard(pygame.sprite.Sprite):
 
 		#assign movement variables if moving left or right
 		if moving_left:
-			dx = -self.speed
+			dx = (-self.speed - 5) if self.speedPowerUp else -self.speed
 			self.flip = True
 			self.direction = -1
 		if moving_right:
-			dx = self.speed
+			dx = self.speed + 5 if self.speedPowerUp else self.speed
 			self.flip = False
 			self.direction = 1
 
 		#jump
 		if self.jump == True and self.in_air == False:
-			self.vel_y = -11 if not self.jumpPowerUp else -22
+			self.vel_y = -11 if (not self.jumpPowerUp) and not self.fallPowerUp else -22
 			self.jump = False
 			self.in_air = True
 
 		#apply gravity
-		self.vel_y += GRAVITY
+		self.vel_y = self.vel_y + GRAVITY
 		if self.vel_y > 10:
 			self.vel_y
-		dy += self.vel_y
+   
+		dy += self.vel_y // 3 if self.fallPowerUp else self.vel_y
 
 		#check for collision
 		for tile in world.obstacle_list:
@@ -215,7 +235,7 @@ class Wizard(pygame.sprite.Sprite):
 			if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
 				dx = 0
 				#if the ai has hit a wall then make it turn around
-				if self.char_type == 'enemy' or self.char_type == 'Slime enemy' or self.char_type == 'Ghost enemy' or self.char_type == 'Bat enemy':
+				if self.char_type == 'Slime' or self.char_type == 'Ghost' or self.char_type == 'Bat':
 					self.direction *= -1
 					self.move_counter = 0
 			#check for collision in the y direction
@@ -237,9 +257,11 @@ class Wizard(pygame.sprite.Sprite):
 
 		#check for collision with exit
 		level_complete = False
-		# TODO: change number of items
-		if pygame.sprite.spritecollide(self, exit_group, False) and player.itemsGotten >= 1:
+
+		if pygame.sprite.spritecollide(self, exit_group, False) and player.itemsGotten >= 3:
+			player.disableAllPowerups()
 			level_complete = True
+   
 
 		#check if fallen off the map
 		if self.rect.bottom > SCREEN_HEIGHT:
@@ -351,7 +373,7 @@ class Wizard(pygame.sprite.Sprite):
    
    
 	def kill(self) -> None:
-		if self.char_type != 'enemy':
+		if self.char_type != 'slime':
 			return 
 
 		rng = random.random()
@@ -362,13 +384,13 @@ class Wizard(pygame.sprite.Sprite):
    
 		rng = random.random()
 		if rng >= .5 and player.ectoplasm == 0:
-			player.slime += 1
+			player.ghostsKilled += 1
 			player.itemsGotten += 1
 			player.update()
 	
 		rng = random.random()
 		if rng >= .5 and player.bat_wing == 0:
-			player.slime += 1
+			player.batsKilled += 1
 			player.itemsGotten += 1
 			player.update()
    
@@ -415,7 +437,7 @@ class World():
 						player = Wizard('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 0, 0, 0, 0, 0, 0, False)
 						health_bar = HealthBar(10, 10, player.health, player.health)
 					elif tile == 16:#create enemies
-						enemy = Wizard('enemy', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0, 0, 0, 0, 0, 0, False)
+						enemy = Wizard('Slime', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0, 0, 0, 0, 0, 0, False)
 						enemy_group.add(enemy)
 					elif tile == 17:#create mana box
 						item_box = ItemBox('Mana', x * TILE_SIZE, y * TILE_SIZE)
@@ -444,15 +466,12 @@ class World():
 					elif tile == 25:#create bat wing
 						item_box = ItemBox('Bat Wing', x * TILE_SIZE, y * TILE_SIZE)
 						item_box_group.add(item_box)
-					elif tile == 26:#create slime enemy
-						item_box = ItemBox('Slime enemy', x * TILE_SIZE, y * TILE_SIZE)
-						item_box_group.add(item_box)
-					elif tile == 27:#create slime enemy
-						item_box = ItemBox('Ghost enemy', x * TILE_SIZE, y * TILE_SIZE)
-						item_box_group.add(item_box)
-					elif tile == 28:#create slime enemy
-						item_box = ItemBox('Bat enemy', x * TILE_SIZE, y * TILE_SIZE)
-						item_box_group.add(item_box)
+					elif tile == 26:#create ghost enemy
+						enemy = Wizard('Ghost', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0, 0, 0, 0, 0, 0, False)
+						enemy_group.add(enemy)
+					elif tile == 27:#create bat enemy
+						enemy = Wizard('Bat', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0, 0, 0, 0, 0, 0, False)
+						enemy_group.add(enemy)
 
 		return player, health_bar
 
@@ -499,7 +518,18 @@ class Bullet(pygame.sprite.Sprite):
 	
 					if enemy.health <= 0:
 						enemy.kill()
-     
+				
+    # if self.char_type == 'Slime enemy' or self.char_type == 'Ghost enemy' or self.char_type == 'Bat enemy':
+
+						if enemy.char_type == 'Slime': 
+							player.slimesKilled += 1
+       
+						elif enemy.char_type == 'Ghost':
+							player.ghostsKilled += 1
+       
+						elif enemy.char_type == 'Bat':
+							player.batsKilled += 1
+       
 					self.kill()
 
 class Decoration(pygame.sprite.Sprite):
@@ -684,30 +714,30 @@ while run:
 		for x in range(player.mana):
 			screen.blit(bullet_img, (90 + (x * 10), 40))
 		#show slime pickup
-		draw_text('SLIME:', font, WHITE, 10, 85)
-		for x in range(player.slime):
-			screen.blit(health_box_img, (80 + (x * 15), 77))
+		# draw_text('SLIME:', font, WHITE, 10, 85)
+		# for x in range(player.slime):
+		# 	screen.blit(slime_drop_img, (80 + (x * 15), 77))
 		# show newt pickup
-		draw_text('NEWT: ', font, WHITE, 10, 110)
+		draw_text('NEWT: ', font, WHITE, 10, 60)
 		for x in range(player.newt):
-			screen.blit(health_box_img, (60 + (x * 15), 100))
+			screen.blit(newt_img, (70 + (x * 15), 55))
 		# show frog pickup
-		draw_text('FROG: ', font, WHITE, 10, 135)
+		draw_text('FROG: ', font, WHITE, 10, 95)
 		for x in range(player.frog):
-			screen.blit(health_box_img, (60 + (x * 15), 120))
+			screen.blit(frog_img, (70 + (x * 15), 90))
 		# show reed pickup
-		draw_text('REED: ', font, WHITE, 10, 160)
+		draw_text('REED: ', font, WHITE, 10, 125)
 		for x in range(player.reed):
-			screen.blit(health_box_img, (60 + (x * 15), 140))
+			screen.blit(reed_img, (70 + (x * 15), 120))
 
 
 		player.update()
 		player.draw()
 
-		for enemy in enemy_group:
-			enemy.ai()
-			enemy.update()
-			enemy.draw()
+		for slime in enemy_group:
+			slime.ai()
+			slime.update()
+			slime.draw()
 
 		#update and draw groups
 		bullet_group.update()
@@ -721,9 +751,9 @@ while run:
 		water_group.draw(screen)
 		exit_group.draw(screen)
   
-		# for enemy in enemy_group:
-		# 	if enemy.health <= 0:
-		# 		enemy.kill()
+		# for slime in enemy_groupS:
+		# 	if slime.health <= 0:
+		# 		slime.kill()
 		# 		break
 
 		#show intro
@@ -784,7 +814,7 @@ while run:
 		#keyboard presses
 		if event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_0:
-				player.jumpPowerUp = not player.jumpPowerUp
+				player.fallPowerUp = not player.fallPowerUp
     
 			if event.key == pygame.K_a:
 				moving_left = True
