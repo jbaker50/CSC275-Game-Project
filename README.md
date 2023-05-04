@@ -17,9 +17,6 @@ WIZARD OF THE VALLEY
    - high score based on time                      ---- Marian
    - Add game name to title                        ---- Marian
    - add a credits/how-to-play button and screen
-   - Change enemies damage dealt                   ---- Jaylee
-   - Adjust bat speed                              ---- Jaylee
-   - Adjust enemy health                           ---- Jaylee
    - Change item icons (inventory system)          ---- Marian
    - change exit to cauldron image                 ---- Marian
    
