@@ -172,6 +172,14 @@ class Wizard(pygame.sprite.Sprite):
 		self.slimesKilled = 0
 		self.batsKilled = 0
 		self.ghostsKilled = 0
+  
+		if self.char_type == 'Slime':
+			self.health = 100
+		if self.char_type == 'Ghost':
+			self.health = 150
+		if self.char_type == 'Bat':
+			self.health = 200
+			self.speed = 5
 		
 		#load all images for the players
 		animation_types = ['Idle', 'Run', 'Jump', 'Death']
@@ -240,8 +248,6 @@ class Wizard(pygame.sprite.Sprite):
    
 		dy += self.vel_y // 3 if self.fallPowerUp else self.vel_y
 
-
-		# TO-DO: make the enemies not fall in the water
 		#check for collision
 		for tile in world.obstacle_list:
 			#check collision in the x direction
@@ -310,7 +316,12 @@ class Wizard(pygame.sprite.Sprite):
 	def ai(self):
 		if self.alive and player.alive:
 			if self.rect.colliderect(player.rect) and self.damageCooldown == 0:
-				player.health -= 10
+				if self.char_type == 'Slime':
+					player.health -= 10
+				if self.char_type == 'Ghost':
+					player.health -= 20
+				if self.char_type == 'Bat':
+					player.health -= 30
 				self.timeSinceLastHit = 0
 	
 			self.damageCooldown = ((self.damageCooldown + 1) % 100)
@@ -324,11 +335,10 @@ class Wizard(pygame.sprite.Sprite):
 				self.idling = True
 				self.idling_counter = 50
 			#check if the ai in near the player
-			# if self.vision.colliderect(player.rect):
+			#if self.vision.colliderect(player.rect):
 				#stop running and face the player
-				# self.update_action(0)#0: idle
-				#shoot
-				# self.shoot()
+				#self.update_action(1)#0: idle
+				#self.speed(50)
 			else:
 				if self.idling == False:
 					if self.direction == 1:
@@ -473,7 +483,7 @@ class World():
 						enemy = Wizard('Ghost', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0, 0, 0, 0, 0, 0, False)
 						enemy_group.add(enemy)
 					elif tile == 27:#create bat enemy
-						enemy = Wizard('Bat', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0, 0, 0, 0, 0, 0, False)
+						enemy = Wizard('Bat', x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 100, 0, 0, 0, 0, 0, 0, False)
 						enemy_group.add(enemy)
 
 		return player, health_bar
