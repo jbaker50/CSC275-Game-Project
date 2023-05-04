@@ -62,7 +62,7 @@ class Enemy(pg.sprite.Sprite):
                 self.idling = True
                 self.idling_counter = 50
 			#check if the ai in near the player
-            # if self.vision.colliderect(player.rect):
+            #if self.vision.colliderect(player.rect):
             #     #stop running and face the player
             #     self.update_action(0)#0: idle
             #     #shoot
