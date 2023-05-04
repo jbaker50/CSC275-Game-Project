@@ -9,6 +9,9 @@ import button
 from settings import *
 vec = pygame.math.Vector2
 
+# Sound effect come from:
+# https://mixkit.co/free-sound-effects/game/
+
 LEVEL = 1
 
 mixer.init()
@@ -26,15 +29,24 @@ moving_right = False
 shoot = False
 
 #load music and sounds
-#pygame.mixer.music.load('audio/music2.mp3')
-#pygame.mixer.music.set_volume(0.3)
-#pygame.mixer.music.play(-1, 0.0, 5000)
-jump_fx = pygame.mixer.Sound('audio/mixkit-air-woosh-1489.wav')
+pygame.mixer.music.load('audio/background_music.mp3')
+pygame.mixer.music.set_volume(0.3)
+pygame.mixer.music.play(-1, 0.0, 5000)
+jump_fx = pygame.mixer.Sound('audio/jump.wav')
 jump_fx.set_volume(0.05)
-shot_fx = pygame.mixer.Sound('audio/mixkit-magic-glitter-shot-2353.wav')
+shot_fx = pygame.mixer.Sound('audio/shoot.wav')
 shot_fx.set_volume(0.05)
 
-#load imagesd
+health_and_mana_fx = pygame.mixer.Sound('audio/health_and_mana.wav')
+health_and_mana_fx.set_volume(0.2)
+pickup_items_fx = pygame.mixer.Sound('audio/pickup_items.wav')
+pickup_items_fx.set_volume(0.3)
+enemy_death_fx = pygame.mixer.Sound('audio/enemy_death.wav')
+enemy_death_fx.set_volume(0.3)
+character_death_fx = pygame.mixer.Sound('audio/character_death.wav')
+character_death_fx.set_volume(0.8)
+
+#load images
 #button images
 start_img = pygame.image.load('img/start_btn.png').convert_alpha()
 exit_img = pygame.image.load('img/exit_btn.png').convert_alpha()
@@ -98,7 +110,6 @@ def draw_bg():
 		screen.blit(layer0, ((x * width) - bg_scroll, 0))
 		screen.blit(layer1, ((x * width) - bg_scroll, 0))
 		screen.blit(layer2, ((x * width) - bg_scroll, 0))
-		#screen.blit(layer3, ((x * width) - bg_scroll, 0))
 		screen.blit(layer4, ((x * width) - bg_scroll, 0))
  
 
@@ -229,6 +240,8 @@ class Wizard(pygame.sprite.Sprite):
    
 		dy += self.vel_y // 3 if self.fallPowerUp else self.vel_y
 
+
+		# TO-DO: make the enemies not fall in the water
 		#check for collision
 		for tile in world.obstacle_list:
 			#check collision in the x direction
@@ -394,18 +407,8 @@ class Wizard(pygame.sprite.Sprite):
 			player.itemsGotten += 1
 			player.update()
    
-		#rng = random.random()
-  
-		# if rng >= .75 and player.frog == 0:
-		# 	player.frog += 1		
-		# 	player.itemsGotten += 1
-		# 	player.update()
-   
-		print(f'RNG Seed: {rng}')
-		print(f'Player item count: {player.itemsGotten}')
-		# if 
-			#screen.blit(slime_drop_img, self.)
-			#screen.blit(self.splat, self.pos - vec(32, 32))
+		#print(f'RNG Seed: {rng}')
+		#print(f'Player item count: {player.itemsGotten}')
 
 	def draw(self):
 		screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
@@ -508,6 +511,7 @@ class Bullet(pygame.sprite.Sprite):
 
 				if player.health <= 0:
 					player.kill()
+					character_death_fx.play()
  
 				self.kill()
     
@@ -518,8 +522,7 @@ class Bullet(pygame.sprite.Sprite):
 	
 					if enemy.health <= 0:
 						enemy.kill()
-				
-    # if self.char_type == 'Slime enemy' or self.char_type == 'Ghost enemy' or self.char_type == 'Bat enemy':
+						enemy_death_fx.play()
 
 						if enemy.char_type == 'Slime': 
 							player.slimesKilled += 1
@@ -581,32 +584,36 @@ class ItemBox(pygame.sprite.Sprite):
 				player.health += 25
 				if player.health > player.max_health:
 					player.health = player.max_health
+				health_and_mana_fx.play()
 			elif self.item_type == 'Mana':
 				player.mana += 15
-			elif self.item_type == 'Slime':
-				self.dropped = False
-				player.itemsGotten += 1
+				health_and_mana_fx.play()
+			#elif self.item_type == 'Slime':
+			#	self.dropped = False
+			#	player.itemsGotten += 1
 			elif self.item_type == 'Newt':
 				player.newt += 1
 				player.itemsGotten += 1
+				pickup_items_fx.play()
 			elif self.item_type == 'Frog':
 				player.frog += 1
 				player.itemsGotten += 1
+				pickup_items_fx.play()
 			elif self.item_type == 'Reed':
 				player.reed += 1
 				player.itemsGotten += 1
+				pickup_items_fx.play()
 			# in the second level
-			elif self.item_type == 'Ectoplasm':
-				player.ectoplasm += 1
-				player.itemsGotten += 1
-    
+			#elif self.item_type == 'Ectoplasm':
+			#	player.ectoplasm += 1
+			#	player.itemsGotten += 1
 			# in the third level
-			elif self.item_type == 'Bat Wing':
-				player.ectoplasm += 1
-				player.itemsGotten += 1
+			#elif self.item_type == 'Bat Wing':
+			#	player.ectoplasm += 1
+			#	player.itemsGotten += 1
 
 			#delete the item box
-			print(f'Items gotten: {player.itemsGotten}')
+			#print(f'Items gotten: {player.itemsGotten}')
 			self.kill()
 
 class HealthBar():
@@ -679,15 +686,6 @@ with open(f'level{level}_data.csv', newline='') as csvfile:
 world = World()
 player, health_bar = world.process_data(world_data)
 
-# item_box = ItemBox('Slime', 20, 160)
-# item_box_group.add(item_box)
-# item_box = ItemBox('Newt', 400, 240)
-# item_box_group.add(item_box)
-# item_box = ItemBox('Frog', 2250, 280)
-# item_box_group.add(item_box)
-# item_box = ItemBox('Reed', 3000, 320)
-# item_box_group.add(item_box)
-
 run = True
 while run:
 
@@ -713,11 +711,6 @@ while run:
 		draw_text('MANA: ', font, WHITE, 10, 35)
 		for x in range(player.mana):
 			screen.blit(bullet_img, (90 + (x * 10), 40))
-		#show slime pickup
-		# draw_text('SLIME:', font, WHITE, 10, 85)
-		# for x in range(player.slime):
-		# 	screen.blit(slime_drop_img, (80 + (x * 15), 77))
-		# show newt pickup
 		draw_text('NEWT: ', font, WHITE, 10, 60)
 		for x in range(player.newt):
 			screen.blit(newt_img, (70 + (x * 15), 55))
@@ -750,11 +743,6 @@ while run:
 		decoration_group.draw(screen)
 		water_group.draw(screen)
 		exit_group.draw(screen)
-  
-		# for slime in enemy_groupS:
-		# 	if slime.health <= 0:
-		# 		slime.kill()
-		# 		break
 
 		#show intro
 		if start_intro == True:

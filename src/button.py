@@ -1,4 +1,10 @@
 import pygame 
+from pygame import mixer
+
+mixer.init()
+
+button_fx = pygame.mixer.Sound('audio/button_clicked.wav')
+button_fx.set_volume(0.8)
 
 #button class
 class Button():
@@ -21,6 +27,7 @@ class Button():
 			if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
 				action = True
 				self.clicked = True
+				button_fx.play()
 
 		if pygame.mouse.get_pressed()[0] == 0:
 			self.clicked = False
