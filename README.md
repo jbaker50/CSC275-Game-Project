@@ -15,17 +15,13 @@ WIZARD OF THE VALLEY
    
    - End screen
    - high score based on time                      ---- Marian
-   - Add more ghost/ bat enemies for the number    ---- Jaylee
-      you have to kill for the powerups
-   - Add game name to title
-   - add a credits/ how to play button/ screen
+   - Add game name to title                        ---- Marian
+   - add a credits/how-to-play button and screen
    - Change enemies damage dealt                   ---- Jaylee
-   - Add sounds
    - Adjust bat speed                              ---- Jaylee
    - Adjust enemy health                           ---- Jaylee
-   - Change item icons (inventory system)
-   - Adjust tiles in the level                     ---- Jaylee
-   - change exit to cauldron image
+   - Change item icons (inventory system)          ---- Marian
+   - change exit to cauldron image                 ---- Marian
    
    
    - All sounds are from the following website: https://mixkit.co/free-sound-effects/game/
