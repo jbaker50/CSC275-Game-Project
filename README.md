@@ -9,16 +9,8 @@ WIZARD OF THE VALLEY
   - Go back and forth on the screen to to collect 3 different items to access the next level.
   - Kill 5 slimes to get a jump boost, 3 ghosts to get a fall powerup, and 2 bats to get a speed boost (subject to change)
   - Game is over at the end of level 3 once you have collected all of the items.
-   - > as of right now, we do not have the ending screen finished, but that is what we are currently working on.
    
-   TODO:
-   
-   - End screen
-   - high score based on time                      ---- Marian
-   - Add game name to title                        ---- Marian
-   - add a credits/how-to-play button and screen
-   - Change item icons (inventory system)          ---- Marian
-   - change exit to cauldron image                 ---- Marian
-   
-   
-   - All sounds are from the following website: https://mixkit.co/free-sound-effects/game/
+  CREDITS:
+  - All sounds are from the following website: https://mixkit.co/free-sound-effects/game/
+  - The background and terrain are from: https://opengameart.org/content/swamp-2d-tileset-pixel-art
+  - The bat enemy is from: https://opengameart.org/content/castle-platformer
