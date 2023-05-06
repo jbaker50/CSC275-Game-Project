@@ -17,6 +17,9 @@ bg_scroll = 0
 level = 1
 start_game = False
 start_intro = False
+htp = False
+end_game = False
+gametime = 0
 
 #define colours
 BG = (25, 0, 51)
