@@ -55,6 +55,7 @@ title_img = pygame.image.load('img/title.png').convert_alpha()
 start_img = pygame.image.load('img/start_btn.png').convert_alpha()
 exit_img = pygame.image.load('img/exit_btn.png').convert_alpha()
 restart_img = pygame.image.load('img/restart_btn.png').convert_alpha()
+play_img = pygame.image.load('img/play_btn.png').convert_alpha()
 
 #background
 layer0 = pygame.image.load('levels/swamp_resources/2 Background/Layers/0.png').convert_alpha()
@@ -682,8 +683,8 @@ death_fade = ScreenFade(2, PINK, 4)
 
 #create buttons
 title_button = button.Button(SCREEN_WIDTH // 2 - 184, SCREEN_HEIGHT // 2 - 250, title_img, 1)
-start_button = button.Button(SCREEN_WIDTH // 2 - 130, SCREEN_HEIGHT // 2 - 150, start_img, 1)
-exit_button = button.Button(SCREEN_WIDTH // 2 - 110, SCREEN_HEIGHT // 2 + 100, exit_img, 1)
+start_button = button.Button(SCREEN_WIDTH // 2 - 130, SCREEN_HEIGHT // 2, start_img, 1)
+exit_button = button.Button(SCREEN_WIDTH // 2 - 110, SCREEN_HEIGHT // 2 + 150, exit_img, 1)
 restart_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50, restart_img, 2)
 play_button = button.Button(SCREEN_WIDTH // 2 - 110, SCREEN_HEIGHT // 2 + 150, play_img, 1)
 
