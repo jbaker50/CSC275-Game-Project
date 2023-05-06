@@ -2,7 +2,9 @@
 from turtle import _Screen
 from matplotlib.font_manager import get_font
 import pygame
+import time
 from pygame import mixer
+from os import path
 import os
 import random
 import csv
@@ -49,6 +51,7 @@ character_death_fx.set_volume(0.8)
 
 #load images
 #button images
+title_img = pygame.image.load('img/title.png').convert_alpha()
 start_img = pygame.image.load('img/start_btn.png').convert_alpha()
 exit_img = pygame.image.load('img/exit_btn.png').convert_alpha()
 restart_img = pygame.image.load('img/restart_btn.png').convert_alpha()
@@ -77,6 +80,7 @@ bat_drop_img = pygame.image.load('img/tile/26.png').convert_alpha()
 newt_img = pygame.image.load('img/tile/21.png').convert_alpha()
 frog_img = pygame.image.load('img/tile/22.png').convert_alpha()
 reed_img = pygame.image.load('img/tile/23.png').convert_alpha()
+check_img = pygame.image.load('img/tile/28.png').convert_alpha()
 
 
 item_boxes = {
@@ -96,13 +100,20 @@ power_ups = {
 	'Slow Fall'	: health_box_img
 }
 
+#define the highscore file
+dire = path.dirname(__file__)
+with open(path.join(dire, "highscore.txt"), 'r') as f:
+        try:
+                highscore = int(f.read())
+        except:
+                highscore = 0
+
 #define font
 font = pygame.font.SysFont('Futura', 30)
 
 def draw_text(text, font, text_col, x, y):
 	img = font.render(text, True, text_col)
 	screen.blit(img, (x, y))
-
 
 def draw_bg():
 	screen.fill(BG)
@@ -113,7 +124,6 @@ def draw_bg():
 		screen.blit(layer2, ((x * width) - bg_scroll, 0))
 		screen.blit(layer4, ((x * width) - bg_scroll, 0))
  
-
 #function to reset level
 def reset_level():
 	enemy_group.empty()
@@ -671,9 +681,11 @@ intro_fade = ScreenFade(1, BLACK, 4)
 death_fade = ScreenFade(2, PINK, 4)
 
 #create buttons
+title_button = button.Button(SCREEN_WIDTH // 2 - 184, SCREEN_HEIGHT // 2 - 250, title_img, 1)
 start_button = button.Button(SCREEN_WIDTH // 2 - 130, SCREEN_HEIGHT // 2 - 150, start_img, 1)
 exit_button = button.Button(SCREEN_WIDTH // 2 - 110, SCREEN_HEIGHT // 2 + 100, exit_img, 1)
 restart_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50, restart_img, 2)
+play_button = button.Button(SCREEN_WIDTH // 2 - 110, SCREEN_HEIGHT // 2 + 150, play_img, 1)
 
 #create sprite groups
 enemy_group = pygame.sprite.Group()
@@ -706,11 +718,43 @@ while run:
 		#draw menu
 		screen.fill(BG)
 		#add buttons
+		if title_button.draw(screen):
+                        print("Hello there, why'd you click the title?? It's not going to do anything other than make a fun noise.")
 		if start_button.draw(screen):
 			start_game = True
 			start_intro = True
+			htp = True
 		if exit_button.draw(screen):
 			run = False
+	
+	elif htp == True:
+                screen.fill(BG)
+                draw_text("How to Play:", font, WHITE, 10, 50)
+                draw_text("- Use WASD to move left and right and jump, and SPACEBAR to shoot.", font, WHITE, 10, 90)
+                draw_text("- Explore the three levels to find the items on your checklist, then take them", font, WHITE, 10, 120)
+                draw_text("to your cauldron at the end.", font, WHITE, 10, 140)
+                draw_text("- Kill 5 slimes to get a jump boost, 3 ghosts to get a slow fall, and 2 bats to", font, WHITE, 10, 170)
+                draw_text("get a speed boost.", font, WHITE, 10, 190)
+                draw_text("- Game is over at the end of level 3 once you have collected all of the items.", font, WHITE, 10, 220)
+                draw_text("- Avoid the water! The Wizard never learned how to swim.", font, WHITE, 10, 250)
+                if play_button.draw(screen):
+                        htp = False
+                        begin = time.time()
+
+        elif end_game == True:
+                screen.fill(BG)
+                draw_text("The Wizard successfully collected all of their ingredients, and with them,", font, WHITE, 10, 50)
+                draw_text("they rid the Valley of monsters once and for all!", font, WHITE, 10, 70)
+                draw_text("Time passed: " + str(gametime) + " seconds", font, WHITE, SCREEN_WIDTH / 2 - 120, SCREEN_HEIGHT / 2 - 40)
+                
+                if gametime <= highscore:
+                    highscore = gametime
+                    draw_text("NEW LOWEST TIME!", font, WHITE, SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT / 2 + 40)
+                    with open(path.join(dire, "highscore.txt"), 'w') as f:
+                        f.write(str(gametime))
+                else:
+                    draw_text("Best Time: " + str(highscore) + " seconds", font, WHITE, SCREEN_WIDTH / 2 - 120, SCREEN_HEIGHT / 2 + 40)
+	
 	else:
 		#update background
 		draw_bg()
@@ -719,21 +763,20 @@ while run:
 		#show player health
 		health_bar.draw(player.health)
 		#show mana
-		draw_text('MANA: ', font, WHITE, 10, 35)
-		for x in range(player.mana):
-			screen.blit(bullet_img, (90 + (x * 10), 40))
-		draw_text('NEWT: ', font, WHITE, 10, 60)
-		for x in range(player.newt):
-			screen.blit(newt_img, (70 + (x * 15), 55))
-		# show frog pickup
-		draw_text('FROG: ', font, WHITE, 10, 95)
-		for x in range(player.frog):
-			screen.blit(frog_img, (70 + (x * 15), 90))
-		# show reed pickup
-		draw_text('REED: ', font, WHITE, 10, 125)
-		for x in range(player.reed):
-			screen.blit(reed_img, (70 + (x * 15), 120))
-
+		draw_text('MANA: ', font, WHITE, 10, 40)
+                for x in range(player.mana):
+                        screen.blit(bullet_img, (90 + (x * 10), 45))
+                draw_text('NEWT: ', font, WHITE, 10, 70)
+                for x in range(player.newt):
+                        screen.blit(check_img, (80 + (x * 15), 70))
+                # show frog pickup
+                draw_text('FROG: ', font, WHITE, 10, 100)
+                for x in range(player.frog):
+                        screen.blit(check_img, (80 + (x * 15), 100))
+                # show reed pickup
+                draw_text('REED: ', font, WHITE, 10, 130)
+                for x in range(player.reed):
+                        screen.blit(check_img, (80 + (x * 15), 130))
 
 		player.update()
 		player.draw()
@@ -789,6 +832,12 @@ while run:
 								world_data[x][y] = int(tile)
 					world = World()
 					player, health_bar = world.process_data(world_data)	
+				else:
+                                        end_game = True
+                                        end = time.time()
+                                        elapsed = end - begin
+                                        elapsed = int(elapsed)
+                                        gametime = elapsed
 		else:
 			screen_scroll = 0
 			if death_fade.fade():
