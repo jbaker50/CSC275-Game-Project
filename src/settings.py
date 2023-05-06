@@ -19,7 +19,8 @@ start_game = False
 start_intro = False
 
 #define colours
-BG = (144, 201, 120)
+BG = (25, 0, 51)
+OLD_BG = (144, 201, 120)
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
